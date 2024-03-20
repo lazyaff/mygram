@@ -2,6 +2,7 @@ package config
 
 import (
 	"final-project/controllers"
+	"final-project/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,8 +13,8 @@ func StartServer() *gin.Engine{
 	// users
 	router.POST("/users/register", controllers.RegisterUser)
 	router.POST("/users/login", controllers.LoginUser)
-	router.PUT("/users", controllers.Tes)
-	router.DELETE("/users", controllers.Tes)
+	router.PUT("/users", middleware.Auth(), controllers.UpdateUser)
+	router.DELETE("/users", middleware.Auth(), controllers.DeleteUser)
 
 	// photos
 	router.POST("/photos", controllers.Tes)
