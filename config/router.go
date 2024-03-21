@@ -31,10 +31,15 @@ func StartServer() *gin.Engine{
 	router.DELETE("/comments/:commentId", controllers.Tes)
 
 	// social media
-	router.POST("/socialmedias", controllers.Tes)
-	router.GET("/socialmedias", controllers.Tes)
-	router.PUT("/socialmedias/:socialMediaId", controllers.Tes)
-	router.DELETE("/socialmedias/:socialMediaId", controllers.Tes)
+	socialMediaRouter := router.Group("/socialmedias") 
+	{
+		socialMediaRouter.Use(middleware.Auth())
+		socialMediaRouter.POST("/", controllers.CreateSocialMedia)
+		socialMediaRouter.GET("/", controllers.GetAllSocialMedias)
+		socialMediaRouter.GET("/:socialMediaId", controllers.GetSocialMedia)
+		socialMediaRouter.PUT("/:socialMediaId", controllers.UpdateSocialMedia)
+		socialMediaRouter.DELETE("/:socialMediaId", controllers.DeleteSocialMedia)
+	}
 	
 	return router
 }

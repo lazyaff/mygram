@@ -131,7 +131,7 @@ func RegisterUser(ctx *gin.Context) {
 			ctx.JSON(400, gin.H{
 				"status":  "error",
 				"code": "400",
-				"message": "Url tidak valid",
+				"message": "Profile image url tidak valid",
 			})
 			return
 		}
@@ -314,7 +314,7 @@ func UpdateUser(ctx *gin.Context) {
 			ctx.JSON(400, gin.H{
 				"status":  "error",
 				"code": "400",
-				"message": "Url tidak valid",
+				"message": "Profile image url tidak valid",
 			})
 			return
 		}
