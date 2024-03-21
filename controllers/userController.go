@@ -6,6 +6,7 @@ import (
 	"final-project/models"
 	"net/http"
 	"net/mail"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,7 +26,7 @@ func RegisterUser(ctx *gin.Context) {
 
 	// bind data
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Periksa kembali inputan anda",
@@ -35,7 +36,7 @@ func RegisterUser(ctx *gin.Context) {
 
 	// validasi email tidak kosong
 	if user.Email == "" {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Email tidak boleh kosong",
@@ -45,7 +46,7 @@ func RegisterUser(ctx *gin.Context) {
 
 	// validasi email unique
 	if err := db.Where("email = ?", user.Email).First(&user).Error; err == nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Email sudah terdaftar",
@@ -55,7 +56,7 @@ func RegisterUser(ctx *gin.Context) {
 
 	// validasi email valid
 	if _, err := mail.ParseAddress(user.Email); err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Email tidak valid",
@@ -65,7 +66,7 @@ func RegisterUser(ctx *gin.Context) {
 
 	// validasi username tidak kosong
 	if user.Username == "" {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Username tidak boleh kosong",
@@ -75,7 +76,7 @@ func RegisterUser(ctx *gin.Context) {
 
 	// validasi username unique
 	if err := db.Where("username = ?", user.Username).First(&user).Error; err == nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Username sudah terdaftar",
@@ -85,7 +86,7 @@ func RegisterUser(ctx *gin.Context) {
 
 	// validasi password tidak kosong
 	if user.Password == "" {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Password tidak boleh kosong",
@@ -95,7 +96,7 @@ func RegisterUser(ctx *gin.Context) {
 
 	// validasi password minimal 6 karakter
 	if len(user.Password) < 6 {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Password minimal 6 karakter",
@@ -105,7 +106,7 @@ func RegisterUser(ctx *gin.Context) {
 
 	// validasi age tidak kosong
 	if user.Age == 0 {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Usia tidak boleh kosong",
@@ -114,13 +115,26 @@ func RegisterUser(ctx *gin.Context) {
 	}
 
 	// validasi age minimal 8
-	if user.Age <= 8 {
-		ctx.JSON(200, gin.H{
+	if user.Age < 8 {
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
-			"message": "Usia harus diatas 8 tahun",
+			"message": "Usia minimal 8 tahun",
 		})
 		return
+	}
+
+	// validasi profile image url
+	if user.ProfileImageUrl != "" {
+		// validasi url harus valid
+		if !strings.Contains(user.ProfileImageUrl, ".") {
+			ctx.JSON(400, gin.H{
+				"status":  "error",
+				"code": "400",
+				"message": "Url tidak valid",
+			})
+			return
+		}
 	}
 
 	// set datetime
@@ -129,7 +143,7 @@ func RegisterUser(ctx *gin.Context) {
 
 	// insert data
 	if err := db.Create(&user).Error; err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": err.Error(),
@@ -156,7 +170,7 @@ func LoginUser(ctx *gin.Context) {
 
 	// bind data
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Periksa kembali inputan anda",
@@ -168,7 +182,7 @@ func LoginUser(ctx *gin.Context) {
 
 	// verifikasi emaiil terdaftar
 	if err := db.Where("email = ?", user.Email).First(&user).Error; err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(401, gin.H{
 			"status":  "error",
 			"code": "401",
 			"message": "Email tidak terdaftar",
@@ -178,7 +192,7 @@ func LoginUser(ctx *gin.Context) {
 
 	// verifikasi kata sandi
 	if pass := helpers.CheckPassHash(passwordInput, user.Password); !pass {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(401, gin.H{
 			"status":  "error",
 			"code": "401",
 			"message": "Kata sandi salah",
@@ -205,7 +219,7 @@ func UpdateUser(ctx *gin.Context) {
 	
 	// verifikasi user terdaftar
 	if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(401, gin.H{
 			"status":  "error",
 			"code": "401",
 			"message": "Pengguna tidak terdaftar",
@@ -215,7 +229,7 @@ func UpdateUser(ctx *gin.Context) {
 
 	// bind data
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Periksa kembali inputan anda",
@@ -225,7 +239,7 @@ func UpdateUser(ctx *gin.Context) {
 
 	// validasi email tidak kosong
 	if user.Email == "" {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Email tidak boleh kosong",
@@ -235,7 +249,7 @@ func UpdateUser(ctx *gin.Context) {
 
 	// validasi email unique
 	if err := db.Where("email = ? AND id != ?", user.Email, user.Id).First(&cekUser).Error; err == nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Email sudah terdaftar",
@@ -245,7 +259,7 @@ func UpdateUser(ctx *gin.Context) {
 
 	// validasi email valid
 	if _, err := mail.ParseAddress(user.Email); err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Email tidak valid",
@@ -255,7 +269,7 @@ func UpdateUser(ctx *gin.Context) {
 
 	// validasi username tidak kosong
 	if user.Username == "" {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Username tidak boleh kosong",
@@ -265,7 +279,7 @@ func UpdateUser(ctx *gin.Context) {
 
 	// validasi username unique
 	if err := db.Where("username = ? AND id != ?", user.Username, user.Id).First(&cekUser).Error; err == nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Username sudah terdaftar",
@@ -275,7 +289,7 @@ func UpdateUser(ctx *gin.Context) {
 
 	// validasi age tidak kosong
 	if user.Age == 0 {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Usia tidak boleh kosong",
@@ -284,13 +298,26 @@ func UpdateUser(ctx *gin.Context) {
 	}
 
 	// validasi age minimal 8
-	if user.Age <= 8 {
-		ctx.JSON(200, gin.H{
+	if user.Age < 8 {
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
-			"message": "Usia harus diatas 8 tahun",
+			"message": "Usia minimal 8 tahun",
 		})
 		return
+	}
+
+	// validasi profile image url
+	if user.ProfileImageUrl != "" {
+		// validasi url harus valid
+		if !strings.Contains(user.ProfileImageUrl, ".") {
+			ctx.JSON(400, gin.H{
+				"status":  "error",
+				"code": "400",
+				"message": "Url tidak valid",
+			})
+			return
+		}
 	}
 
 	// set datetime
@@ -298,7 +325,7 @@ func UpdateUser(ctx *gin.Context) {
 
 	// update user
 	if err := db.Save(&user).Error; err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Gagal update user",
@@ -325,7 +352,7 @@ func DeleteUser(ctx *gin.Context) {
 
 	// verifikasi user terdaftar
 	if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(401, gin.H{
 			"status":  "error",
 			"code": "401",
 			"message": "Pengguna tidak terdaftar",
@@ -335,7 +362,7 @@ func DeleteUser(ctx *gin.Context) {
 
 	// hapus foto
 	if err := db.Delete(&user.Photos, "user_id = ?", user.Id).Error; err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Gagal hapus foto",
@@ -345,7 +372,7 @@ func DeleteUser(ctx *gin.Context) {
 
 	// hapus komentar
 	if err := db.Delete(&user.Comments, "user_id = ?", user.Id).Error; err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Gagal hapus komentar",
@@ -355,7 +382,7 @@ func DeleteUser(ctx *gin.Context) {
 
 	// hapus media sosial
 	if err := db.Delete(&user.SocialMedias, "user_id = ?", user.Id).Error; err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Gagal hapus media sosial",
@@ -365,7 +392,7 @@ func DeleteUser(ctx *gin.Context) {
 
 	// hapus user
 	if err := db.Delete(&user).Error; err != nil {
-		ctx.JSON(200, gin.H{
+		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Gagal hapus user",
