@@ -9,11 +9,11 @@ import (
 )
 
 var (
-	host     = "localhost"
+	host     = "monorail.proxy.rlwy.net"
 	user     = "postgres"
-	password = "123456789"
-	dbPort   = "5432"
-	dbname   = "mygram"
+	password = "oBjIXKbkPaSkadZaZioiFQvwhKewuMCu"
+	dbPort   = "58742"
+	dbname   = "railway"
 	db       *gorm.DB
 	err      error
 )
