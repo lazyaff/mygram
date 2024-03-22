@@ -8,6 +8,7 @@ type Photo struct {
 	Caption   string    `gorm:"type:varchar(200)" json:"caption"`
 	PhotoUrl  string    `gorm:"not null;type:text" json:"photo_url"`
 	UserId    uint      `gorm:"not null;type:bigint" json:"user_id"`
-	CreatedAt time.Time `gorm:"type:timestamp" json:"created_at"`
-	UpdatedAt time.Time `gorm:"type:timestamp" json:"updated_at"`
+	Comments  []Comment `gorm:"foreignKey:PhotoId" json:"-"`
+	CreatedAt time.Time `gorm:"type:timestamp" json:"-"`
+	UpdatedAt time.Time `gorm:"type:timestamp" json:"-"`
 }

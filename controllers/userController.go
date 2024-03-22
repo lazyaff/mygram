@@ -349,6 +349,7 @@ func DeleteUser(ctx *gin.Context) {
 	db := database.GetDB()
 	userID := ctx.MustGet("userData").(float64)
 	var user models.User
+	var photos []models.Photo
 
 	// verifikasi user terdaftar
 	if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
@@ -360,22 +361,45 @@ func DeleteUser(ctx *gin.Context) {
 		return
 	}
 
-	// hapus foto
-	if err := db.Delete(&user.Photos, "user_id = ?", user.Id).Error; err != nil {
-		ctx.JSON(400, gin.H{
-			"status":  "error",
-			"code": "400",
-			"message": "Gagal hapus foto",
-		})
-		return
-	}
-
 	// hapus komentar
 	if err := db.Delete(&user.Comments, "user_id = ?", user.Id).Error; err != nil {
 		ctx.JSON(400, gin.H{
 			"status":  "error",
 			"code": "400",
 			"message": "Gagal hapus komentar",
+		})
+		return
+	}
+
+	// ambil semua foto user
+	if err := db.Where("user_id = ?", user.Id).Find(&photos).Error; err != nil {
+		ctx.JSON(400, gin.H{
+			"status":  "error",
+			"code": "400",
+			"message": "Gagal ambil semua foto user",
+		})
+		return
+	}
+
+	// hapus semua komentar yang ada pada foto user
+	for _, photo := range photos {
+		// hapus semua comments
+		if err := db.Delete(&photo.Comments, "photo_id = ?", photo.Id).Error; err != nil {
+			ctx.JSON(400, gin.H{
+				"status":  "error",
+				"code": "400",
+				"message": "Gagal hapus semua komentar pada foto user",
+			})
+			return
+		}
+	}
+
+	// hapus foto
+	if err := db.Delete(&user.Photos, "user_id = ?", user.Id).Error; err != nil {
+		ctx.JSON(400, gin.H{
+			"status":  "error",
+			"code": "400",
+			"message": "Gagal hapus foto",
 		})
 		return
 	}

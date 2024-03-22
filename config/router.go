@@ -17,18 +17,26 @@ func StartServer() *gin.Engine{
 	router.DELETE("/users", middleware.Auth(), controllers.DeleteUser)
 
 	// photos
-	router.POST("/photos", controllers.Tes)
-	router.GET("/photos", controllers.Tes)
-	router.GET("/photos/:photoId", controllers.Tes)
-	router.PUT("/photos/:photoId", controllers.Tes)
-	router.DELETE("/photos/:photoId", controllers.Tes)
+	photoRouter := router.Group("/photos")
+	{
+		photoRouter.Use(middleware.Auth())
+		photoRouter.POST("/", controllers.CreatePhoto)
+		photoRouter.GET("/", controllers.GetAllUsersPhotos)
+		photoRouter.GET("/:photoId", controllers.GetUsersPhoto)
+		photoRouter.PUT("/:photoId", controllers.UpdatePhoto)
+		photoRouter.DELETE("/:photoId", controllers.DeletePhoto)
+	}
 
 	// comments
-	router.POST("/comments", controllers.Tes)
-	router.GET("/comments", controllers.Tes)
-	router.GET("/comments/:commentId", controllers.Tes)
-	router.PUT("/comments/:commentId", controllers.Tes)
-	router.DELETE("/comments/:commentId", controllers.Tes)
+	commentRouter := router.Group("/comments")
+	{
+		commentRouter.Use(middleware.Auth())
+		commentRouter.POST("/", controllers.CreateComment)
+		commentRouter.GET("/", controllers.GetAllUsersComments)
+		commentRouter.GET("/:commentId", controllers.GetUserComment)
+		commentRouter.PUT("/:commentId", controllers.UpdateComment)
+		commentRouter.DELETE("/:commentId", controllers.DeleteComment)
+	}
 
 	// social media
 	socialMediaRouter := router.Group("/socialmedias") 
